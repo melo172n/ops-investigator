@@ -5,6 +5,7 @@ from fastapi import APIRouter, Header, HTTPException, Request, status
 
 from app.core.config import Settings
 from app.integrations.chatwoot import ChatwootClient
+from app.repositories.zabbix_alerts import ZabbixAlertRepository
 from app.schemas.zabbix import ZabbixAlert, ZabbixWebhookResponse
 from app.services.zabbix_alerts import ZabbixAlertService
 
@@ -33,6 +34,8 @@ async def receive_zabbix_alert(
             detail="Webhook secret inválido",
         )
 
-    service = ZabbixAlertService(ChatwootClient(settings))
+    repository: ZabbixAlertRepository = (
+        request.app.state.zabbix_alert_repository
+    )
+    service = ZabbixAlertService(ChatwootClient(settings), repository)
     return await service.handle(payload)
-

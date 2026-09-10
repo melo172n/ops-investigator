@@ -8,6 +8,10 @@ Vocabulário do domínio usado para distinguir os sinais operacionais, os proble
 Um sinal emitido por uma fonte de monitoramento que indica uma condição relevante. Vários alertas podem se referir ao mesmo incidente.
 _Evitar_: Incidente, problema
 
+**Ocorrência de Alerta**:
+Uma transição de estado comunicada por uma fonte para um alerta, como `PROBLEM` ou `RESOLVED`. A repetição da mesma transição é uma entrega duplicada, não uma nova ocorrência.
+_Evitar_: Incidente, tentativa de notificação
+
 **Incidente**:
 Uma degradação real e delimitada na operação da plataforma de atendimento. Pode reunir vários alertas e várias investigações durante seu ciclo de vida.
 _Evitar_: Alerta, evento

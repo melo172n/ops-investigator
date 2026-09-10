@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
+    database_url: SecretStr = SecretStr("")
 
     zabbix_webhook_secret: SecretStr
 
@@ -26,4 +27,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()  # type: ignore[call-arg]
-

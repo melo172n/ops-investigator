@@ -29,11 +29,14 @@ A primeira fatia da POC está implementada:
 - validação e normalização do payload com Pydantic;
 - formatação de uma notificação operacional;
 - envio para uma conversa do Chatwoot;
+- persistência de incidentes, ocorrências de alerta e tentativas de notificação;
+- deduplicação de transições repetidas do Zabbix;
+- correlação de `PROBLEM` e `RESOLVED` no mesmo incidente;
 - modo seguro que processa alertas sem realizar envios externos;
 - Dockerfile para empacotamento da aplicação;
 - testes automatizados do health check e do webhook.
 
-O LangGraph, a busca de logs no Loki, a persistência em PostgreSQL e a detecção de conversas sem resposta fazem parte dos próximos incrementos.
+O LangGraph, a busca de logs no Loki e a detecção de conversas sem resposta fazem parte dos próximos incrementos.
 
 ## Fluxo implementado
 

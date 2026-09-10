@@ -1,7 +1,7 @@
 import logging
-from uuid import uuid4
 
 from app.integrations.chatwoot import ChatwootClient, ChatwootError
+from app.repositories.zabbix_alerts import ZabbixAlertRepository
 from app.schemas.zabbix import (
     NormalizedAlert,
     NotificationResult,
@@ -13,12 +13,29 @@ logger = logging.getLogger(__name__)
 
 
 class ZabbixAlertService:
-    def __init__(self, chatwoot: ChatwootClient) -> None:
+    def __init__(
+        self,
+        chatwoot: ChatwootClient,
+        repository: ZabbixAlertRepository,
+    ) -> None:
         self._chatwoot = chatwoot
+        self._repository = repository
 
     async def handle(self, incoming: ZabbixAlert) -> ZabbixWebhookResponse:
-        incident_id = f"inc_{uuid4().hex[:16]}"
         alert = self._normalize(incoming)
+        recorded = await self._repository.record_alert(alert)
+        incident_id = recorded.incident_id
+
+        if recorded.duplicate:
+            return ZabbixWebhookResponse(
+                incident_id=incident_id,
+                alert=alert,
+                notification=NotificationResult(
+                    status="skipped",
+                    detail="duplicate alert event",
+                ),
+            )
+
         content = self._format_message(incident_id, alert)
 
         try:
@@ -42,6 +59,14 @@ class ZabbixAlertService:
                 status="failed",
                 detail=str(exc),
             )
+
+        await self._repository.record_notification(
+            alert_id=recorded.alert_id,
+            channel=notification.channel,
+            status=notification.status,
+            external_message_id=notification.external_message_id,
+            detail=notification.detail,
+        )
 
         return ZabbixWebhookResponse(
             incident_id=incident_id,
@@ -77,4 +102,3 @@ class ZabbixAlertService:
             lines.append(f"Detalhes: {alert.description}")
         lines.extend(["", f"Incidente: {incident_id}"])
         return "\n".join(lines)
-
