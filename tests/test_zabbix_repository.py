@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 
 from app.db.base import Base
 from app.db.models import AlertEvent, Incident, NotificationAttempt
@@ -23,6 +23,7 @@ def make_alert(status: str = "PROBLEM") -> NormalizedAlert:
 async def test_repository_persists_lifecycle_and_notification() -> None:
     database = Database("sqlite+aiosqlite:///:memory:")
     async with database.engine.begin() as connection:
+        await connection.execute(text("PRAGMA foreign_keys=ON"))
         await connection.run_sync(Base.metadata.create_all)
 
     repository = SqlAlchemyZabbixAlertRepository(database.session_factory)

@@ -125,19 +125,22 @@
 
 ## Verification & Operational Tactics
 
-1. **[2026-09-10] Verify webhook changes with a complete transition cycle**
+1. **[2026-09-10] Flush a new incident before inserting its alert event**
+   Do instead: because the models currently use a scalar `incident_id` without an ORM relationship, explicitly flush the new `Incident` before adding `AlertEvent`; keep SQLite foreign-key enforcement enabled in the repository regression test so PostgreSQL ordering failures are caught locally.
+
+2. **[2026-09-10] Verify webhook changes with a complete transition cycle**
    Do instead: trigger `0 -> 1 -> 0`, inspect Zabbix action history, confirm the API response, and confirm distinct PROBLEM and RESOLVED messages in WhatsApp.
 
-2. **[2026-09-10] Check the Zabbix server log when sender processing fails**
+3. **[2026-09-10] Check the Zabbix server log when sender processing fails**
    Do instead: filter recent `tecnocw-zabbix-server` logs for the item key, technical host, `trapper`, `not found` and `cannot process` before changing host/item definitions.
 
-3. **[2026-09-10] Send PowerShell test payloads as UTF-8 bytes**
+4. **[2026-09-10] Send PowerShell test payloads as UTF-8 bytes**
    Do instead: encode JSON using `[System.Text.Encoding]::UTF8.GetBytes($payload)` before the HTTP request to prevent parsing/character-encoding failures.
 
-4. **[2026-09-10] Treat the working tree as user-owned**
+5. **[2026-09-10] Treat the working tree as user-owned**
    Do instead: preserve unrelated changes and the currently untracked `HANDOFF.md`; inspect `git status` before edits and never discard files to make the tree clean.
 
-5. **[2026-09-10] The repository has no `.planning/` GSD structure**
+6. **[2026-09-10] The repository has no `.planning/` GSD structure**
    Do instead: use the existing product documents as authority unless the user explicitly chooses to initialize GSD planning; do not assume phase files exist.
 
 ## Immediate Roadmap

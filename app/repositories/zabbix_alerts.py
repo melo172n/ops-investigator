@@ -109,6 +109,10 @@ class SqlAlchemyZabbixAlertRepository:
                             ),
                         )
                         session.add(incident)
+                        # The event references the incident by scalar ID, so the ORM
+                        # cannot infer the insert dependency without a relationship.
+                        # Persist the parent explicitly before inserting its event.
+                        await session.flush()
                     else:
                         incident.service = alert.service
                         incident.title = alert.title
