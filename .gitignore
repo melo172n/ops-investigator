@@ -1,8 +1,8 @@
 __pycache__/
 *.py[cod]
 .env
+.claude/napkin.md
 .pytest_cache/
 .ruff_cache/
 .venv/
 dist/
-
