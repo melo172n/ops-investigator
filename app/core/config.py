@@ -23,6 +23,13 @@ class Settings(BaseSettings):
         le=5,
     )
 
+    openai_api_key: SecretStr = SecretStr("")
+    openai_model: str = ""
+    openai_timeout_seconds: float = Field(default=30, ge=1, le=120)
+    openai_max_retries: int = Field(default=2, ge=0, le=3)
+    openai_max_output_tokens: int = Field(default=1_200, ge=128, le=4_000)
+    openai_max_evidence_items: int = Field(default=20, ge=1, le=100)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -35,12 +35,13 @@ A primeira fatia da POC está implementada:
 - retentativas limitadas para falhas transitórias do Chatwoot, com confirmação de entrega antes de repetir respostas ambíguas;
 - registro de cada tentativa de notificação e logs operacionais em formato chave-valor;
 - esqueleto LangGraph da investigação com contratos tipados para incidente, evidência e relatório;
+- analisador OpenAI pela Responses API com saída estruturada e armazenamento desativado;
 - conclusão segura quando faltam evidências ou uma fonte fica indisponível;
 - modo seguro que processa alertas sem realizar envios externos;
 - Dockerfile para empacotamento da aplicação;
 - testes automatizados do health check e do webhook.
 
-A integração do grafo com um modelo, a busca de logs no Loki e a persistência das investigações fazem parte dos próximos incrementos. A detecção de conversas sem resposta foi adiada.
+A conexão do analisador ao fluxo, a busca de logs no Loki e a persistência das investigações fazem parte dos próximos incrementos. A detecção de conversas sem resposta foi adiada.
 
 ## Fluxo implementado
 
@@ -78,6 +79,7 @@ Os detectores determinísticos identificarão o incidente. O LangGraph será res
 | FastAPI | API e recebimento de webhooks |
 | Pydantic Settings | Configuração e validação |
 | HTTPX | Integração HTTP com o Chatwoot |
+| OpenAI Responses API | Análise estruturada de evidências |
 | Pytest | Testes automatizados |
 | Docker | Empacotamento para o Coolify |
 | LangGraph | Orquestração tipada da investigação |
