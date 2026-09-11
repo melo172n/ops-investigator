@@ -1,6 +1,10 @@
 import logging
 
-from app.integrations.chatwoot import ChatwootClient, ChatwootError
+from app.integrations.chatwoot import (
+    ChatwootAttempt,
+    ChatwootClient,
+    ChatwootError,
+)
 from app.repositories.zabbix_alerts import ZabbixAlertRepository
 from app.schemas.zabbix import (
     NormalizedAlert,
@@ -37,9 +41,11 @@ class ZabbixAlertService:
             )
 
         content = self._format_message(incident_id, alert)
+        attempts: tuple[ChatwootAttempt, ...] = ()
 
         try:
             sent = await self._chatwoot.send_operations_message(content)
+            attempts = sent.attempts
             if sent.skipped:
                 notification = NotificationResult(
                     status="skipped",
@@ -51,22 +57,37 @@ class ZabbixAlertService:
                     external_message_id=sent.message_id,
                 )
         except ChatwootError as exc:
+            attempts = exc.attempts
             logger.exception(
-                "Chatwoot notification failed",
-                extra={"incident_id": incident_id},
+                "chatwoot_notification status=failed incident_id=%s "
+                "source_event_id=%s alert_status=%s attempts=%s",
+                incident_id,
+                alert.source_event_id,
+                alert.status,
+                len(attempts),
             )
             notification = NotificationResult(
                 status="failed",
                 detail=str(exc),
             )
 
-        await self._repository.record_notification(
-            alert_id=recorded.alert_id,
-            channel=notification.channel,
-            status=notification.status,
-            external_message_id=notification.external_message_id,
-            detail=notification.detail,
-        )
+        if not attempts:
+            attempts = (
+                ChatwootAttempt(
+                    status=notification.status,
+                    external_message_id=notification.external_message_id,
+                    detail=notification.detail,
+                ),
+            )
+
+        for attempt in attempts:
+            await self._repository.record_notification(
+                alert_id=recorded.alert_id,
+                channel=notification.channel,
+                status=attempt.status,
+                external_message_id=attempt.external_message_id,
+                detail=attempt.detail,
+            )
 
         return ZabbixWebhookResponse(
             incident_id=incident_id,

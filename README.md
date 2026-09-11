@@ -32,6 +32,8 @@ A primeira fatia da POC está implementada:
 - persistência de incidentes, ocorrências de alerta e tentativas de notificação;
 - deduplicação de transições repetidas do Zabbix;
 - correlação de `PROBLEM` e `RESOLVED` no mesmo incidente;
+- retentativas limitadas para falhas transitórias do Chatwoot, com confirmação de entrega antes de repetir respostas ambíguas;
+- registro de cada tentativa de notificação e logs operacionais em formato chave-valor;
 - modo seguro que processa alertas sem realizar envios externos;
 - Dockerfile para empacotamento da aplicação;
 - testes automatizados do health check e do webhook.
