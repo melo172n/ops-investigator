@@ -35,6 +35,13 @@ class FailingCollector:
         raise RuntimeError("sensitive upstream detail")
 
 
+class FailingNamedCollector:
+    source = "loki"
+
+    async def collect(self, _: IncidentContext) -> EvidenceCollection:
+        raise RuntimeError("sensitive upstream detail")
+
+
 class LokiCollector:
     async def collect(self, _: IncidentContext) -> EvidenceCollection:
         return EvidenceCollection(
@@ -123,6 +130,16 @@ async def test_agent_hides_collector_error_details() -> None:
     assert result["evidence"].errors == ["RuntimeError"]
     assert "sensitive" not in result["evidence"].model_dump_json()
     assert result["report"].outcome == InvestigationOutcome.INCONCLUSIVE
+
+
+async def test_agent_identifies_the_unavailable_collector_source() -> None:
+    analyzer = RecordingAnalyzer()
+    graph = build_investigator_graph(FailingNamedCollector(), analyzer).compile()
+
+    result = await graph.ainvoke({"incident": incident()})
+
+    assert result["report"].unavailable_sources == ["loki"]
+    assert result["evidence"].errors == ["RuntimeError"]
 
 
 async def test_agent_returns_failed_when_analysis_fails() -> None:

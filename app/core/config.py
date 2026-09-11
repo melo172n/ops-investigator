@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,11 +30,29 @@ class Settings(BaseSettings):
     openai_max_output_tokens: int = Field(default=1_200, ge=128, le=4_000)
     openai_max_evidence_items: int = Field(default=20, ge=1, le=100)
 
+    loki_url: str = ""
+    loki_bearer_token: SecretStr = SecretStr("")
+    loki_tenant_id: str = ""
+    loki_queries_by_service: dict[str, str] = Field(default_factory=dict)
+    loki_timeout_seconds: float = Field(default=10, ge=1, le=60)
+    loki_window_before_minutes: int = Field(default=15, ge=0, le=60)
+    loki_window_after_minutes: int = Field(default=15, ge=0, le=60)
+    loki_query_limit: int = Field(default=100, ge=1, le=1_000)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_loki_window(self) -> "Settings":
+        total_minutes = (
+            self.loki_window_before_minutes + self.loki_window_after_minutes
+        )
+        if total_minutes > 60:
+            raise ValueError("A janela total do Loki não pode exceder 60 minutos")
+        return self
 
 
 @lru_cache

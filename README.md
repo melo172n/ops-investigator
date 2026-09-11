@@ -36,12 +36,13 @@ A primeira fatia da POC está implementada:
 - registro de cada tentativa de notificação e logs operacionais em formato chave-valor;
 - esqueleto LangGraph da investigação com contratos tipados para incidente, evidência e relatório;
 - analisador OpenAI pela Responses API com saída estruturada e armazenamento desativado;
+- coletor Loki com consultas LogQL permitidas por serviço, janela limitada e sanitização de evidências;
 - conclusão segura quando faltam evidências ou uma fonte fica indisponível;
 - modo seguro que processa alertas sem realizar envios externos;
 - Dockerfile para empacotamento da aplicação;
 - testes automatizados do health check e do webhook.
 
-A conexão do analisador ao fluxo, a busca de logs no Loki e a persistência das investigações fazem parte dos próximos incrementos. A detecção de conversas sem resposta foi adiada.
+A conexão do coletor e do analisador ao fluxo e a persistência das investigações fazem parte dos próximos incrementos. A detecção de conversas sem resposta foi adiada.
 
 ## Fluxo implementado
 

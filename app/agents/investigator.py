@@ -39,8 +39,9 @@ def build_investigator_graph(
         try:
             evidence = await collector.collect(state["incident"])
         except Exception as exc:
+            source = getattr(collector, "source", "evidence_collector")
             evidence = EvidenceCollection(
-                unavailable_sources=["evidence_collector"],
+                unavailable_sources=[source],
                 errors=[type(exc).__name__],
             )
         return {"evidence": evidence}

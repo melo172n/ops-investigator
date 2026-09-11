@@ -77,6 +77,9 @@
 8. **[2026-09-11] The OpenAI analyzer is a typed adapter outside the LangGraph nodes**
    Do instead: use `responses.parse` with the private Pydantic output, require a completed response, keep `store=False`, send only allowlisted incident/evidence fields, and reserve `failed` for technical failures handled by the graph.
 
+9. **[2026-09-11] Loki queries are an explicit allowlist keyed by incident service**
+   Do instead: configure `LOKI_QUERIES_BY_SERVICE`, query `query_range` within at most 60 total minutes, cap results, sanitize log lines, and never interpolate alert text into LogQL.
+
 ## Deployment & Runtime
 
 1. **[2026-09-10] Production runs from the repository Dockerfile in Coolify**
@@ -152,7 +155,7 @@
 ## Immediate Roadmap
 
 1. **[2026-09-11] Complete the minimal investigator around the LangGraph safety skeleton**
-   Do instead: choose the production OpenAI model, connect the implemented analyzer and one bounded Loki tool to the graph, pass the persisted Zabbix incident through it, store the immutable report, and notify operations with facts, hypothesis, confidence and next check.
+   Do instead: choose the production OpenAI model, connect the implemented Loki collector and OpenAI analyzer to the graph, pass the persisted Zabbix incident through it, store the immutable report, and notify operations with facts, hypothesis, confidence and next check.
 
 2. **[2026-09-11] Add evidence sources only when an investigation needs them**
    Do instead: start with Loki; add Zabbix, Chatwoot or UAZAPI read tools only when the structured alert and existing delivery path cannot answer a concrete diagnostic question.
