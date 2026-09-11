@@ -68,11 +68,11 @@
 5. **[2026-09-10] WhatsApp notification currently travels through Chatwoot**
    Do instead: create a public outgoing message in the fixed operations conversation using `/api/v1/accounts/{account_id}/conversations/{conversation_id}/messages`; use `CHATWOOT_ENABLED=false` for safe local processing.
 
-6. **[2026-09-10] PostgreSQL persistence is locally validated and awaiting production deploy**
-   Do instead: deploy the Alembic-backed incident, alert-occurrence and notification-attempt tables; preserve one `inc_<16 hex>` identity across a Zabbix event's `PROBLEM` and `RESOLVED` transitions and skip repeated transitions.
+6. **[2026-09-10] PostgreSQL persistence is merged and validated**
+   Do instead: preserve the Alembic-backed incident, alert-occurrence and notification-attempt tables, one `inc_<16 hex>` identity across a Zabbix event's `PROBLEM` and `RESOLVED` transitions, and skip repeated transitions.
 
-7. **[2026-09-10] Automated coverage is currently minimal**
-   Do instead: preserve tests for health, invalid webhook secret, and accepted/normalized Zabbix alert, then add database, deduplication, retry and Chatwoot-event tests with each increment.
+7. **[2026-09-10] Automated coverage includes the alert path and agent safety skeleton**
+   Do instead: preserve tests for health, webhook authentication, persistence, deduplication, Chatwoot retries and fail-closed agent behavior; add adapter and model evaluations with each increment.
 
 ## Deployment & Runtime
 
@@ -148,25 +148,19 @@
 
 ## Immediate Roadmap
 
-1. **[2026-09-10] Deploy and verify persistence before adding more inbound event sources**
-   Do instead: ship the locally validated migration/repository changes, confirm Alembic creates the production tables, then run one `PROBLEM -> duplicate PROBLEM -> RESOLVED` cycle and verify one incident with two alert occurrences.
+1. **[2026-09-11] Complete the minimal investigator around the LangGraph safety skeleton**
+   Do instead: connect a selected model and one bounded Loki tool, pass the persisted Zabbix incident to the graph, store the immutable report, and notify operations with facts, hypothesis, confidence and next check.
 
-2. **[2026-09-10] Make accepted alerts reliable**
-   Do instead: deploy and validate the implemented safe Chatwoot retries, per-attempt persistence and structured operational logs before expanding to new inbound sources.
+2. **[2026-09-11] Add evidence sources only when an investigation needs them**
+   Do instead: start with Loki; add Zabbix, Chatwoot or UAZAPI read tools only when the structured alert and existing delivery path cannot answer a concrete diagnostic question.
 
-3. **[2026-09-10] Implement unanswered-conversation detection after persistence**
-   Do instead: add authenticated `POST /webhooks/chatwoot`, persist Chatwoot events and response expectations, run a PostgreSQL-backed worker for the four-minute deadline, and re-query Chatwoot before opening an `Incidente de Atendimento`; do not add Redis for the POC.
+3. **[2026-09-10] Keep unanswered-conversation detection deferred**
+   Do instead: revisit the authenticated Chatwoot webhook and PostgreSQL-backed four-minute expectation worker after the infrastructure investigation MVP is working.
 
-4. **[2026-09-10] Add n8n errors as correlated evidence**
-   Do instead: implement authenticated `POST /webhooks/n8n`, store sanitized execution metadata, and correlate it to conversation/execution IDs without assuming absence of an error webhook proves success.
+4. **[2026-09-11] Keep n8n error ingestion deferred**
+   Do instead: let n8n send its workflow errors directly to WhatsApp for now; revisit `POST /webhooks/n8n` only when correlation inside Ops Investigator becomes valuable.
 
-5. **[2026-09-10] Validate read-only evidence adapters before LangGraph**
-   Do instead: implement bounded reads from Zabbix and Loki, verify Chatwoot conversation reads, and evaluate a read-only UAZAPI status endpoint independently.
-
-6. **[2026-09-10] Introduce LangGraph only after deterministic integrations work**
-   Do instead: pass a normalized persisted incident to the graph, collect evidence through read-only adapters, record an immutable investigation, and notify operations with facts, hypothesis, confidence and next check.
-
-7. **[2026-09-10] Telegram is fallback scope, not the current primary path**
+5. **[2026-09-10] Telegram is fallback scope, not the current primary path**
    Do instead: keep WhatsApp via Chatwoot as primary and add Telegram only after the investigation and unanswered-conversation flows are reliable.
 
 ## User Collaboration Directives
