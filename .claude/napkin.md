@@ -125,23 +125,26 @@
 
 ## Verification & Operational Tactics
 
-1. **[2026-09-10] Flush a new incident before inserting its alert event**
+1. **[2026-09-11] Never retry an ambiguous Chatwoot message creation blindly**
+   Do instead: after HTTP `5xx`, read/write timeouts or protocol errors, query recent messages for the exact content; retry only after confirming absence, and fail closed if delivery confirmation is unavailable.
+
+2. **[2026-09-10] Flush a new incident before inserting its alert event**
    Do instead: because the models currently use a scalar `incident_id` without an ORM relationship, explicitly flush the new `Incident` before adding `AlertEvent`; keep SQLite foreign-key enforcement enabled in the repository regression test so PostgreSQL ordering failures are caught locally.
 
-2. **[2026-09-10] Verify webhook changes with a complete transition cycle**
+3. **[2026-09-10] Verify webhook changes with a complete transition cycle**
    Do instead: trigger `0 -> 1 -> 0`, inspect Zabbix action history, confirm the API response, and confirm distinct PROBLEM and RESOLVED messages in WhatsApp.
 
-3. **[2026-09-10] Check the Zabbix server log when sender processing fails**
+4. **[2026-09-10] Check the Zabbix server log when sender processing fails**
    Do instead: filter recent `tecnocw-zabbix-server` logs for the item key, technical host, `trapper`, `not found` and `cannot process` before changing host/item definitions.
 
-4. **[2026-09-10] Send PowerShell test payloads as UTF-8 bytes**
+5. **[2026-09-10] Send PowerShell test payloads as UTF-8 bytes**
    Do instead: encode JSON using `[System.Text.Encoding]::UTF8.GetBytes($payload)` before the HTTP request to prevent parsing/character-encoding failures.
 
-5. **[2026-09-10] Treat the working tree as user-owned**
+6. **[2026-09-10] Treat the working tree as user-owned**
    Do instead: preserve unrelated changes and the currently untracked `HANDOFF.md`; inspect `git status` before edits and never discard files to make the tree clean.
 
-6. **[2026-09-10] The repository has no `.planning/` GSD structure**
-   Do instead: use the existing product documents as authority unless the user explicitly chooses to initialize GSD planning; do not assume phase files exist.
+7. **[2026-09-10] The repository has only codebase maps under `.planning/`, not an active GSD project**
+   Do instead: use the existing product documents as authority unless the user explicitly chooses to initialize GSD planning; do not assume `PROJECT.md`, `STATE.md` or `ROADMAP.md` exist.
 
 ## Immediate Roadmap
 
@@ -149,7 +152,7 @@
    Do instead: ship the locally validated migration/repository changes, confirm Alembic creates the production tables, then run one `PROBLEM -> duplicate PROBLEM -> RESOLVED` cycle and verify one incident with two alert occurrences.
 
 2. **[2026-09-10] Make accepted alerts reliable**
-   Do instead: add idempotent handling, safe Chatwoot retries, structured logs and tests before expanding the action beyond the controlled host/test trigger.
+   Do instead: deploy and validate the implemented safe Chatwoot retries, per-attempt persistence and structured operational logs before expanding to new inbound sources.
 
 3. **[2026-09-10] Implement unanswered-conversation detection after persistence**
    Do instead: add authenticated `POST /webhooks/chatwoot`, persist Chatwoot events and response expectations, run a PostgreSQL-backed worker for the four-minute deadline, and re-query Chatwoot before opening an `Incidente de Atendimento`; do not add Redis for the POC.
