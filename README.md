@@ -34,11 +34,15 @@ A primeira fatia da POC está implementada:
 - correlação de `PROBLEM` e `RESOLVED` no mesmo incidente;
 - retentativas limitadas para falhas transitórias do Chatwoot, com confirmação de entrega antes de repetir respostas ambíguas;
 - registro de cada tentativa de notificação e logs operacionais em formato chave-valor;
+- esqueleto LangGraph da investigação com contratos tipados para incidente, evidência e relatório;
+- analisador OpenAI pela Responses API com saída estruturada e armazenamento desativado;
+- coletor Loki com consultas LogQL permitidas por serviço, janela limitada e sanitização de evidências;
+- conclusão segura quando faltam evidências ou uma fonte fica indisponível;
 - modo seguro que processa alertas sem realizar envios externos;
 - Dockerfile para empacotamento da aplicação;
 - testes automatizados do health check e do webhook.
 
-O LangGraph, a busca de logs no Loki e a detecção de conversas sem resposta fazem parte dos próximos incrementos.
+A conexão do coletor e do analisador ao fluxo e a persistência das investigações fazem parte dos próximos incrementos. A detecção de conversas sem resposta foi adiada.
 
 ## Fluxo implementado
 
@@ -58,14 +62,11 @@ Quando `CHATWOOT_ENABLED=false`, todo o fluxo é executado até a etapa de envio
 ```mermaid
 flowchart TD
     Z[Zabbix] --> API[Ops Investigator]
-    CW[Chatwoot] --> API
-    N8N[n8n] --> API
+    API --> DB[(PostgreSQL)]
     API --> LG[LangGraph]
     LG --> L[Loki]
-    LG --> Z
     LG --> DB[(PostgreSQL)]
-    LG --> CW
-    LG --> T[Telegram]
+    LG --> CW[Chatwoot]
     CW --> WA[WhatsApp]
 ```
 
@@ -79,10 +80,11 @@ Os detectores determinísticos identificarão o incidente. O LangGraph será res
 | FastAPI | API e recebimento de webhooks |
 | Pydantic Settings | Configuração e validação |
 | HTTPX | Integração HTTP com o Chatwoot |
+| OpenAI Responses API | Análise estruturada de evidências |
 | Pytest | Testes automatizados |
 | Docker | Empacotamento para o Coolify |
-| LangGraph | Orquestração da investigação, planejada |
-| PostgreSQL | Persistência de incidentes, planejada |
+| LangGraph | Orquestração tipada da investigação |
+| PostgreSQL | Persistência de incidentes e alertas |
 
 
 
