@@ -12,6 +12,7 @@ from app.repositories.zabbix_alerts import (
     SqlAlchemyZabbixAlertRepository,
     ZabbixAlertRepository,
 )
+from app.services.investigations import LangGraphIncidentInvestigator
 
 
 def create_app(
@@ -46,6 +47,9 @@ def create_app(
     )
     application.state.settings = resolved_settings
     application.state.zabbix_alert_repository = repository
+    application.state.incident_investigator = LangGraphIncidentInvestigator(
+        resolved_settings
+    )
     application.include_router(zabbix_router)
 
     @application.get("/health", tags=["system"])
