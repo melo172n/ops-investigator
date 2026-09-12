@@ -7,6 +7,7 @@ from app.core.config import Settings
 from app.integrations.chatwoot import ChatwootClient
 from app.repositories.zabbix_alerts import ZabbixAlertRepository
 from app.schemas.zabbix import ZabbixAlert, ZabbixWebhookResponse
+from app.services.investigations import IncidentInvestigator
 from app.services.zabbix_alerts import ZabbixAlertService
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -37,5 +38,10 @@ async def receive_zabbix_alert(
     repository: ZabbixAlertRepository = (
         request.app.state.zabbix_alert_repository
     )
-    service = ZabbixAlertService(ChatwootClient(settings), repository)
+    investigator: IncidentInvestigator = request.app.state.incident_investigator
+    service = ZabbixAlertService(
+        ChatwootClient(settings),
+        repository,
+        investigator,
+    )
     return await service.handle(payload)

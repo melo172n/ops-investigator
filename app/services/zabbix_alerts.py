@@ -12,6 +12,8 @@ from app.schemas.zabbix import (
     ZabbixAlert,
     ZabbixWebhookResponse,
 )
+from app.schemas.investigation import IncidentContext, InvestigationReport
+from app.services.investigations import IncidentInvestigator
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +23,11 @@ class ZabbixAlertService:
         self,
         chatwoot: ChatwootClient,
         repository: ZabbixAlertRepository,
+        investigator: IncidentInvestigator | None = None,
     ) -> None:
         self._chatwoot = chatwoot
         self._repository = repository
+        self._investigator = investigator
 
     async def handle(self, incoming: ZabbixAlert) -> ZabbixWebhookResponse:
         alert = self._normalize(incoming)
@@ -40,7 +44,8 @@ class ZabbixAlertService:
                 ),
             )
 
-        content = self._format_message(incident_id, alert)
+        report = await self._investigate(incident_id, alert)
+        content = self._format_message(incident_id, alert, report)
         attempts: tuple[ChatwootAttempt, ...] = ()
 
         try:
@@ -107,8 +112,31 @@ class ZabbixAlertService:
             description=incoming.description,
         )
 
+    async def _investigate(
+        self,
+        incident_id: str,
+        alert: NormalizedAlert,
+    ) -> InvestigationReport | None:
+        if self._investigator is None:
+            return None
+        return await self._investigator.investigate(
+            IncidentContext(
+                incident_id=incident_id,
+                service=alert.service,
+                title=alert.title,
+                severity=alert.severity,
+                status=alert.status,
+                occurred_at=alert.occurred_at,
+                description=alert.description,
+            )
+        )
+
     @staticmethod
-    def _format_message(incident_id: str, alert: NormalizedAlert) -> str:
+    def _format_message(
+        incident_id: str,
+        alert: NormalizedAlert,
+        report: InvestigationReport | None,
+    ) -> str:
         lines = [
             "🚨 Alerta operacional",
             "",
@@ -121,5 +149,13 @@ class ZabbixAlertService:
         ]
         if alert.description:
             lines.append(f"Detalhes: {alert.description}")
+        if report is not None:
+            lines.extend(["", f"Conclusão: {report.outcome}"])
+            if report.hypothesis:
+                lines.append(f"Hipótese: {report.hypothesis}")
+            if report.facts:
+                lines.append("Evidências:")
+                lines.extend(f"- {fact.text}" for fact in report.facts)
+            lines.append(f"Próxima verificação: {report.next_check}")
         lines.extend(["", f"Incidente: {incident_id}"])
         return "\n".join(lines)

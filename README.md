@@ -38,11 +38,12 @@ A primeira fatia da POC está implementada:
 - analisador OpenAI pela Responses API com saída estruturada e armazenamento desativado;
 - coletor Loki com consultas LogQL permitidas por serviço, janela limitada e sanitização de evidências;
 - conclusão segura quando faltam evidências ou uma fonte fica indisponível;
+- investigação acionada pelos novos alertas do Zabbix, com evidências do Loki e análise estruturada quando configurada;
 - modo seguro que processa alertas sem realizar envios externos;
 - Dockerfile para empacotamento da aplicação;
 - testes automatizados do health check e do webhook.
 
-A conexão do coletor e do analisador ao fluxo e a persistência das investigações fazem parte dos próximos incrementos. A detecção de conversas sem resposta foi adiada.
+A persistência dos relatórios de investigação e a detecção de conversas sem resposta fazem parte dos próximos incrementos.
 
 ## Fluxo implementado
 
@@ -56,6 +57,22 @@ flowchart LR
 ```
 
 Quando `CHATWOOT_ENABLED=false`, todo o fluxo é executado até a etapa de envio, que retorna o status `skipped`.
+
+## Configuração do Loki
+
+Defina `LOKI_QUERIES_BY_SERVICE` no `.env` como um mapa entre o nome do host
+recebido do Zabbix e uma consulta LogQL previamente permitida. A chave deve
+corresponder exatamente ao campo `host` do alerta; não use o nome real do seu
+host no `.env.example`.
+
+```env
+LOKI_QUERIES_BY_SERVICE='{"your-zabbix-host":"{service=~\"bridge|chatwoot|chatwoot-worker\"}"}'
+```
+
+Essa allowlist restringe a investigação inicial aos serviços do fluxo de
+atendimento. Os logs do n8n não são consultados: erros desse sistema devem ser
+enviados ao Ops Investigator pelo webhook dedicado quando esse fluxo for
+implementado.
 
 ## Arquitetura planejada
 
@@ -85,6 +102,5 @@ Os detectores determinísticos identificarão o incidente. O LangGraph será res
 | Docker | Empacotamento para o Coolify |
 | LangGraph | Orquestração tipada da investigação |
 | PostgreSQL | Persistência de incidentes e alertas |
-
 
 
